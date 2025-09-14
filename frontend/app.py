@@ -9,20 +9,113 @@ import time
 # Configure Streamlit page
 st.set_page_config(
     page_title="Multimodal RAG Assistant",
-    page_icon="�",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern UI - Updated Sept 2025
+# Custom CSS for modern UI - Fixed for sidebar visibility
 st.markdown("""
 <style>
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Global Styles - main content only */
-    .main {
-        padding-top: 2rem;
+    /* Force sidebar to be visible on all screen sizes with gradient background */
+    section[data-testid="stSidebar"] {
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
+        background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 50%, #f5f5f5 100%) !important;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
+        padding: 1rem !important;
+        background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 50%, #f5f5f5 100%) !important;
+    }
+    
+    /* Ensure sidebar content is visible with dark text */
+    .css-1d391kg, .css-1lcbmhc {
+        padding-top: 1rem !important;
+        padding-right: 1rem !important;
+        padding-left: 1rem !important;
+        background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 50%, #f5f5f5 100%) !important;
+    }
+    
+    /* Sidebar text colors - dark text on gradient background */
+    section[data-testid="stSidebar"] * {
+        color: #2c3e50 !important;
+    }
+    
+    /* Sidebar headers */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        color: #1976d2 !important;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Sidebar markdown text */
+    section[data-testid="stSidebar"] .markdown-text-container {
+        color: #37474f !important;
+    }
+    
+    /* Sidebar info boxes */
+    section[data-testid="stSidebar"] .stAlert {
+        background: linear-gradient(135deg, rgba(227, 242, 253, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+        color: #1976d2 !important;
+        border: 1px solid #bbdefb !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    
+    /* Sidebar file uploader */
+    section[data-testid="stSidebar"] .stFileUploader {
+        background: linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(227, 242, 253, 0.7) 100%) !important;
+        border: 2px dashed #667eea !important;
+        border-radius: 10px !important;
+        backdrop-filter: blur(5px) !important;
+    }
+    
+    /* Sidebar buttons - ensure they are visible and styled properly */
+    section[data-testid="stSidebar"] .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 600 !important;
+        width: 100% !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* Force all button types in sidebar to have same styling */
+    section[data-testid="stSidebar"] button[kind="primary"],
+    section[data-testid="stSidebar"] button[kind="secondary"],
+    section[data-testid="stSidebar"] button[kind="tertiary"],
+    section[data-testid="stSidebar"] button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    /* Sidebar button hover effect - applies to all sidebar buttons including delete buttons */
+    section[data-testid="stSidebar"] .stButton > button:hover,
+    section[data-testid="stSidebar"] button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    /* Main content area adjustment */
+    .main .block-container {
+        padding-left: 2rem;
+        max-width: none;
     }
     
     /* Custom font for the entire app */
@@ -167,10 +260,11 @@ st.markdown("""
         color: white;
         border: none;
         border-radius: 10px;
-        padding: 0.5rem 2rem;
+        padding: 0.5rem 1rem;
         font-weight: 600;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        width: 100%;
     }
     
     .stButton > button:hover {
@@ -198,29 +292,10 @@ st.markdown("""
         border-color: #667eea;
     }
     
-    /* Hide Streamlit branding */
+    /* Hide Streamlit branding but keep sidebar */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -260,19 +335,7 @@ def query_chatbot(query: str, max_results: int = 5) -> Dict[str, Any]:
         st.error(f"Query error: {str(e)}")
         return None
 
-# Add caching to prevent excessive API calls
-@st.cache_data(ttl=5)  # Cache for 5 seconds
-def get_documents_cached():
-    """Get list of uploaded documents with caching"""
-    try:
-        response = requests.get(f"{BACKEND_URL}/documents")
-        if response.status_code == 200:
-            return response.json()
-        return []
-    except Exception as e:
-        st.error(f"Error fetching documents: {str(e)}")
-        return []
-
+@st.cache_data(ttl=10)  # Cache for 10 seconds
 def get_documents() -> List[Dict[str, Any]]:
     """Get list of uploaded documents"""
     try:
@@ -286,8 +349,6 @@ def get_documents() -> List[Dict[str, Any]]:
         return []
 
 def delete_document(document_id: str) -> bool:
-    """Delete a document"""
-def delete_document(document_id: str):
     """Delete a specific document"""
     try:
         response = requests.delete(f"{BACKEND_URL}/documents/{document_id}")
@@ -300,7 +361,7 @@ def delete_document(document_id: str):
         st.error(f"Error deleting document: {str(e)}")
         return False
 
-def clear_all_documents():
+def clear_all_documents() -> bool:
     """Clear all documents"""
     try:
         response = requests.delete(f"{BACKEND_URL}/documents")
@@ -317,7 +378,7 @@ def display_modern_header():
     """Display modern header with branding"""
     st.markdown("""
     <div class="main-header">
-        <h1>� Multimodal RAG Assistant</h1>
+        <h1>🤖 Multimodal RAG Assistant</h1>
         <p>Intelligent document analysis with AI-powered insights • Upload • Chat • Discover</p>
     </div>
     """, unsafe_allow_html=True)
@@ -335,60 +396,98 @@ def display_metrics(documents):
         """, unsafe_allow_html=True)
     
     with col2:
+        pdf_count = sum(1 for doc in documents if 'pdf' in doc.get('file_type', '').lower())
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-value">{sum(1 for doc in documents if doc.get('file_type', '').startswith('application/pdf'))}</div>
+            <div class="metric-value">{pdf_count}</div>
             <div class="metric-label">📑 PDFs</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
+        audio_count = sum(1 for doc in documents if 'audio' in doc.get('file_type', '').lower())
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-value">{sum(1 for doc in documents if doc.get('file_type', '').startswith('audio/'))}</div>
+            <div class="metric-value">{audio_count}</div>
             <div class="metric-label">🎵 Audio</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
+        video_count = sum(1 for doc in documents if 'video' in doc.get('file_type', '').lower())
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-value">{sum(1 for doc in documents if doc.get('file_type', '').startswith('video/'))}</div>
+            <div class="metric-value">{video_count}</div>
             <div class="metric-label">🎬 Video</div>
         </div>
         """, unsafe_allow_html=True)
 
 def display_chat_message(message, is_user=True):
     """Display chat message with modern styling"""
+    import html
+    import re
+    
+    # Clean message but preserve line breaks and basic formatting
+    cleaned_message = message.replace('\n', '<br>')
+    # Escape only dangerous HTML but preserve basic formatting
+    cleaned_message = re.sub(r'<(?!/?br\b)[^>]*>', '', cleaned_message)
+    
     if is_user:
         st.markdown(f"""
         <div class="user-message">
             <strong>👤 You:</strong><br>
-            {message}
+            {cleaned_message}
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
         <div class="assistant-message">
             <strong>🤖 Assistant:</strong><br>
-            {message}
+            {cleaned_message}
         </div>
         """, unsafe_allow_html=True)
 
 def display_sources(sources):
-    """Display sources with modern card styling"""
+    """Display sources with collapsible expander"""
     if sources:
-        st.markdown("### 📚 Sources")
-        for i, source in enumerate(sources, 1):
-            filename = source.get('filename', 'Unknown')
-            content = source.get('content', '')[:200] + "..." if len(source.get('content', '')) > 200 else source.get('content', '')
-            
-            st.markdown(f"""
-            <div class="source-card">
-                <strong>📄 Source {i}: {filename}</strong><br>
-                <em>{content}</em>
-            </div>
-            """, unsafe_allow_html=True)
+        with st.expander(f"📚 Sources ({len(sources)} found)", expanded=False):
+            for i, source in enumerate(sources, 1):
+                # Debug: Show the actual source structure
+                st.write("Debug - Source structure:", source)
+                
+                # Handle different possible metadata structures
+                metadata = source.get('metadata', {})
+                
+                # Try multiple ways to get filename with more options
+                filename = (
+                    source.get('filename') or
+                    source.get('file_name') or
+                    source.get('document_name') or
+                    metadata.get('filename') or
+                    metadata.get('file_name') or
+                    metadata.get('source') or
+                    metadata.get('document') or
+                    metadata.get('document_name') or
+                    metadata.get('file') or
+                    metadata.get('name') or
+                    f"Document_{i}"
+                )
+                
+                content = source.get('content', source.get('text', ''))
+                if len(content) > 200:
+                    content = content[:200] + "..."
+                
+                # Escape HTML characters in filename and content
+                import html
+                escaped_filename = html.escape(str(filename))
+                escaped_content = html.escape(str(content))
+                
+                st.markdown(f"""
+                <div class="source-card">
+                    <strong>📄 Source {i}: {escaped_filename}</strong><br>
+                    <em>{escaped_content}</em>
+                </div>
+                """, unsafe_allow_html=True)
 
 def main():
     # Initialize session state
@@ -396,97 +495,156 @@ def main():
         st.session_state.messages = []
     if "documents" not in st.session_state:
         st.session_state.documents = []
-    
-    # Prevent file re-upload loops by tracking processed files
     if 'processed_files' not in st.session_state:
         st.session_state.processed_files = set()
-    
-    # Prevent duplicate processing on page refresh
-    if 'page_loaded' not in st.session_state:
-        st.session_state.page_loaded = True
-        st.session_state.processed_files = set()
+    if 'uploaded_files_pending' not in st.session_state:
+        st.session_state.uploaded_files_pending = []
+    if 'is_generating' not in st.session_state:
+        st.session_state.is_generating = False
 
     # Display modern header
     display_modern_header()
     
-    # Get documents and update session state
-    documents = get_documents()
-    st.session_state.documents = documents
+    # Get documents and update session state only if needed
+    if 'documents' not in st.session_state or not st.session_state.documents:
+        documents = get_documents()
+        st.session_state.documents = documents
+    else:
+        documents = st.session_state.documents
     
     # Display metrics
     display_metrics(documents)
     
-    # Sidebar for file upload and document management  
+    # SIDEBAR - Modified implementation with process button
     with st.sidebar:
-        st.header("📁 Document Management")
+        st.markdown("# 📁 Document Management")
+        st.markdown("---")
         
         # File upload section
+        st.markdown("### 📤 Upload Files")
         uploaded_files = st.file_uploader(
-            "Upload Document",
+            "Choose files to upload",
             type=['pdf', 'wav', 'mp3', 'mp4', 'avi', 'mov', 'mkv', 'm4a', 'flac'],
-            help="Supported formats: PDF, Audio files, Video files",
-            accept_multiple_files=True  # Allow multiple file uploads
+            help="Supported: PDF, Audio, Video files",
+            accept_multiple_files=True,
+            key="file_uploader_main"
         )
         
-        # Add file upload prevention logic
+        # Store uploaded files in session state without processing
         if uploaded_files:
-            for uploaded_file in uploaded_files:
-                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
-                
-                if file_key not in st.session_state.processed_files:
-                    with st.spinner(f"Processing {uploaded_file.name}..."):
-                        success = upload_file(uploaded_file)
-                        if success:
-                            st.success(f"✅ {uploaded_file.name} uploaded successfully!")
-                            st.session_state.processed_files.add(file_key)
-                            # Force refresh of documents list without rerun
-                            if 'documents' in st.session_state:
-                                del st.session_state['documents']
-                        else:
-                            st.error(f"❌ Failed to upload {uploaded_file.name}")
+            st.session_state.uploaded_files_pending = uploaded_files
+            st.info(f"📁 {len(uploaded_files)} file(s) ready to process")
+            
+            # Display pending files
+            for file in uploaded_files:
+                st.write(f"• {file.name} ({file.type})")
         
-        st.subheader("📚 Uploaded Documents")
+        # Process button - only show if there are pending files
+        if st.session_state.uploaded_files_pending:
+            if st.button("🚀 Process Files", use_container_width=True, type="primary"):
+                processed_count = 0
+                failed_count = 0
+                
+                for uploaded_file in st.session_state.uploaded_files_pending:
+                    file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                    
+                    if file_key not in st.session_state.processed_files:
+                        with st.spinner(f"Processing {uploaded_file.name}..."):
+                            success = upload_file(uploaded_file)
+                            if success:
+                                st.success(f"✅ {uploaded_file.name} processed!")
+                                st.session_state.processed_files.add(file_key)
+                                processed_count += 1
+                            else:
+                                st.error(f"❌ Failed to process {uploaded_file.name}")
+                                failed_count += 1
+                
+                # Clear pending files after processing
+                st.session_state.uploaded_files_pending = []
+                
+                if processed_count > 0:
+                    st.success(f"Successfully processed {processed_count} file(s)!")
+                if failed_count > 0:
+                    st.error(f"Failed to process {failed_count} file(s)")
+                
+                # Only rerun once after all processing is complete
+                time.sleep(1)
+                st.rerun()
+        
+        st.markdown("---")
+        st.markdown("### 📚 Your Documents")
+        
+        # Document list
         if documents:
             for idx, doc in enumerate(documents):
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.write(f"• {doc.get('filename', 'Unknown')}")
-                    st.caption(f"Type: {doc.get('file_type', 'Unknown')}")
-                with col2:
-                    # Create unique key using index and filename
-                    unique_key = f"delete_{idx}_{doc.get('filename', 'unknown').replace(' ', '_').replace('.', '_')}"
-                    if st.button("🗑️", key=unique_key, help=f"Delete {doc.get('filename', 'Unknown')}", use_container_width=True):
-                        doc_id = doc.get('id', doc.get('filename', ''))  # Use filename as fallback if no ID
-                        if delete_document(doc_id):
-                            st.success(f"Deleted {doc.get('filename', 'Unknown')}")
-                            st.rerun()
-                        else:
-                            st.error("Failed to delete document")
+                filename = doc.get('filename', 'Unknown')
+                file_type = doc.get('file_type', 'Unknown')
+                
+                # File type icon
+                if 'pdf' in file_type.lower():
+                    icon = "📄"
+                elif 'audio' in file_type.lower():
+                    icon = "🎵"
+                elif 'video' in file_type.lower():
+                    icon = "🎬"
+                else:
+                    icon = "📁"
+                
+                # Display file info
+                st.markdown(f"{icon} **{filename}**")
+                st.caption(f"Type: {file_type}")
+                
+                # Delete button
+                delete_key = f"delete_{idx}_{hash(filename) % 10000}"
+                if st.button("🗑️ Delete", key=delete_key, help=f"Delete {filename}", use_container_width=True, type="primary"):
+                    doc_id = doc.get('id', filename)
+                    if delete_document(doc_id):
+                        st.success("File deleted!")
+                        # Use a flag to prevent multiple reruns
+                        st.session_state.documents = []  # Clear cache
+                        time.sleep(0.5)  # Reduced delay
+                        st.rerun()
+                    else:
+                        st.error("Delete failed!")
+                
+                if idx < len(documents) - 1:
+                    st.markdown("---")
         else:
-            st.info("No documents uploaded yet.")
+            st.info("📭 No documents uploaded yet.")
+            st.markdown("Upload files above and click 'Process Files'!")
         
-        # Clear all documents button
+        # Quick actions
         if documents:
             st.markdown("---")
-            # Fix the clear all documents button handler
-            if st.button("🗑️ Clear All Documents", use_container_width=True, type="secondary"):
-                        if clear_all_documents():
-                            st.success("All documents cleared successfully!")
-                            # Clear cache instead of rerun
-                            if 'documents' in st.session_state:
-                                del st.session_state['documents']
-                            st.cache_data.clear()
-                        else:
-                            st.error("Failed to clear documents")        # Add manual refresh button
-        if st.button("🔄 Refresh Documents", help="Manually refresh document list"):
-            # Clear cache and refresh
-            if 'documents' in st.session_state:
-                del st.session_state['documents']
-            if 'documents_timestamp' in st.session_state:
-                del st.session_state['documents_timestamp']
-            st.cache_data.clear()  # Clear all cached data
-            st.rerun()
-    
+            st.markdown("### ⚡ Quick Actions")
+            
+            if st.button("🗑️ Clear All Documents", use_container_width=True, type="primary"):
+                if clear_all_documents():
+                    st.success("All documents cleared!")
+                    st.session_state.processed_files.clear()
+                    st.session_state.documents = []  # Clear cache
+                    time.sleep(0.5)  # Reduced delay
+                    st.rerun()
+                else:
+                    st.error("Failed to clear documents")
+            
+            if st.button("🔄 Refresh List", use_container_width=True, type="primary"):
+                st.session_state.documents = []  # Clear cache
+                st.rerun()
+        
+        # App info
+        st.markdown("---")
+        st.markdown("### ℹ️ About")
+        st.markdown("""
+        **Multimodal RAG Assistant**
+        
+        Upload documents to chat with your content using AI.
+        
+        🔹 **PDF**: Text extraction  
+        🔹 **Audio**: Speech transcription  
+        🔹 **Video**: Audio extraction + transcription  
+        """)
+
     # Main chat interface
     st.markdown("### 💬 Chat with Your Documents")
     
@@ -498,7 +656,6 @@ def main():
                 display_chat_message(message["content"], is_user=True)
             else:
                 display_chat_message(message["content"], is_user=False)
-                # Display sources if available
                 if "sources" in message:
                     display_sources(message["sources"])
         st.markdown('</div>', unsafe_allow_html=True)
@@ -507,8 +664,7 @@ def main():
         <div class="chat-container">
             <div class="assistant-message">
                 <strong>🤖 Assistant:</strong><br>
-                Hello! I'm your multimodal RAG assistant. Upload some documents and ask me anything about their content. 
-                I can analyze PDFs, transcribe audio, and extract information from videos!
+                Hello! I'm your multimodal RAG assistant. Upload some documents using the sidebar and ask me anything about their content!
                 <br><br>
                 <strong>Try asking:</strong>
                 <ul>
@@ -520,76 +676,89 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     
-    # Quick action buttons
-    if documents:
-        st.markdown("### 🎯 Quick Actions")
-        col1, col2, col3 = st.columns(3)
+   
+    
+    # Create a placeholder for the thinking spinner
+    thinking_placeholder = st.empty()
+    
+    # Show thinking spinner above input when generating
+    if st.session_state.is_generating:
+        with thinking_placeholder.container():
+            with st.spinner("🤔 Thinking..."):
+                # This will keep the spinner active while processing
+                time.sleep(0.1)
+    
+    # Create form for Enter key submission
+    with st.form(key="chat_form", clear_on_submit=True):
+        user_input = st.text_area(
+            "Type your question here...",
+            placeholder="Ask me anything about your uploaded documents... (Press Ctrl+Enter to send)",
+            height=100,
+            key="user_input_main",
+            help="Press Ctrl+Enter to send your message"
+        )
         
-        with col1:
-            if st.button("📋 Summarize All", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Please provide a comprehensive summary of all my uploaded documents."})
-                st.rerun()
-        
+        # Dynamic button based on generation state
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("🔍 Key Topics", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "What are the main topics and themes across all my documents?"})
-                st.rerun()
-        
-        with col3:
-            if st.button("❓ Q&A Insights", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Generate some interesting questions and answers based on my document content."})
-                st.rerun()
-    
-    # Chat input section - moved to bottom
-    st.markdown("### ✍️ Ask a Question")
-    user_input = st.text_area(
-        "Type your question here...",
-        placeholder="Ask me anything about your uploaded documents...",
-        height=100,
-        key="user_input"
-    )
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🚀 Send Message", type="primary", use_container_width=True):
-            if user_input.strip():
-                if not documents:
-                    st.warning("⚠️ Please upload some documents first before asking questions!")
-                else:
-                    # Add user message to chat
-                    st.session_state.messages.append({"role": "user", "content": user_input})
-                    
-                    # Query the backend
-                    with st.spinner("🤔 Thinking..."):
-                        response = query_chatbot(user_input)
-                    
-                    if response:
-                        answer = response.get('answer', 'No answer received')
-                        sources = response.get('sources', [])
-                        
-                        # Add assistant message to chat
-                        message_data = {"role": "assistant", "content": answer}
-                        if sources:
-                            message_data["sources"] = sources
-                        st.session_state.messages.append(message_data)
-                    else:
-                        st.session_state.messages.append({
-                            "role": "assistant", 
-                            "content": "❌ Sorry, I couldn't process your question. Please try again."
-                        })
-                    
-                    # Clear input and rerun
-                    st.rerun()
+            if st.session_state.is_generating:
+                # Show pause/stop button during generation
+                send_button = st.form_submit_button(
+                    "⏸️ Generating...", 
+                    type="secondary", 
+                    use_container_width=True,
+                    disabled=True
+                )
             else:
-                st.warning("⚠️ Please enter a question before sending!")
+                # Show send button when ready
+                send_button = st.form_submit_button(
+                    "🚀 Send Message", 
+                    type="primary", 
+                    use_container_width=True
+                )
+    
+    # Handle form submission first - this ensures user message is added immediately
+    if send_button and user_input.strip() and not st.session_state.is_generating:
+        if not documents:
+            st.warning("⚠️ Please upload some documents first!")
+        else:
+            # Add user message immediately
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            st.session_state.is_generating = True
+            st.rerun()  # Rerun to show thinking indicator immediately
+    
+    # Process the query when generating (this runs after rerun)
+    if st.session_state.is_generating and len(st.session_state.messages) > 0:
+        last_message = st.session_state.messages[-1]
+        if last_message["role"] == "user":
+            # Query backend with spinner shown above
+            with thinking_placeholder.container():
+                with st.spinner("🤔 Thinking..."):
+                    response = query_chatbot(last_message["content"])
+            
+            if response:
+                answer = response.get('answer', 'No answer received')
+                sources = response.get('sources', [])
+                
+                message_data = {"role": "assistant", "content": answer}
+                if sources:
+                    message_data["sources"] = sources
+                st.session_state.messages.append(message_data)
+            else:
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": "❌ Sorry, I couldn't process your question. Please try again."
+                })
+            
+            # Reset generating state and clear thinking spinner
+            st.session_state.is_generating = False
+            thinking_placeholder.empty()
+            st.rerun()
+    
+    elif send_button and not user_input.strip():
+        st.warning("⚠️ Please enter a question!")
 
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; opacity: 0.7; margin-top: 2rem;">
-        <small>🚀 Powered by FastAPI • Streamlit • ChromaDB • Google Gemini</small>
-    </div>
-    """, unsafe_allow_html=True)
+   
 
 if __name__ == "__main__":
     main()

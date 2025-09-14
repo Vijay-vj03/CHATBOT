@@ -25,15 +25,18 @@ COPY pyproject.toml uv.lock ./
 # Install Python dependencies using UV
 RUN uv sync --frozen
 
-# Create necessary directories (models will be downloaded at runtime if needed)
-RUN mkdir -p uploads logs vector_db models
+# Create necessary directories with proper permissions
+RUN mkdir -p uploads logs vector_db models && \
+    chmod 755 uploads logs vector_db models
 
 # Copy application code
 COPY . .
 
-# Set environment variables
+# Set environment variables for file processing
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV MAX_UPLOAD_SIZE=100MB
+ENV PROCESSING_TIMEOUT=300
 
 # Expose ports
 EXPOSE 8000 8501

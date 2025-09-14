@@ -57,7 +57,11 @@ class VectorStore:
                     **metadata,
                     "document_id": document_id,
                     "chunk_index": i,
-                    "total_chunks": len(chunks)
+                    "total_chunks": len(chunks),
+                    # Ensure filename is preserved in multiple formats
+                    "filename": metadata.get('filename', metadata.get('source', 'Unknown')),
+                    "source": metadata.get('filename', metadata.get('source', 'Unknown')),
+                    "file_name": metadata.get('filename', metadata.get('source', 'Unknown'))
                 }
                 
                 chunk_ids.append(chunk_id)
