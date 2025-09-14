@@ -38,42 +38,13 @@ A powerful multimodal Retrieval-Augmented Generation (RAG) chatbot that processe
 ## 📋 Prerequisites
 
 - Python 3.11+
-- UV (Universal Virtualenv) - installed automatically via setup scripts
+- UV (Universal Virtualenv)
 - Docker and Docker Compose (for containerized deployment)
 - Git
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
-
-#### Windows (PowerShell)
-```powershell
-# Clone the repository
-git clone <repository-url>
-cd TASK1
-
-# Run automated setup
-.\setup.ps1
-
-# Start development servers
-.\run_dev.ps1
-```
-
-#### Linux/Mac (Bash)
-```bash
-# Clone the repository
-git clone <repository-url>
-cd TASK1
-
-# Run automated setup
-chmod +x setup.sh run_dev.sh
-./setup.sh
-
-# Start development servers
-./run_dev.sh
-```
-
-### Option 2: Docker Deployment (Production)
+### Option 1: Docker Deployment (Recommended)
 
 ```bash
 # Clone the repository
@@ -87,9 +58,13 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-### Option 3: Manual Setup
+### Option 2: Manual Development Setup
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd TASK1
+
 # Install UV (if not already installed)
 pip install uv
 
@@ -106,6 +81,19 @@ uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 # Start frontend (Terminal 2)
 uv run streamlit run frontend/app.py --server.port 8501
+```
+
+### Option 3: Direct Python Execution
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Start backend
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+
+# Start frontend (in separate terminal)
+streamlit run frontend/app.py --server.port 8501
 ```
 
 ## 🌐 Access Points
@@ -188,29 +176,27 @@ Response: {"message": "Multimodal RAG Chatbot API"}
 
 ```
 TASK1/
-├── backend/                 # FastAPI backend
+├── backend/                    # FastAPI backend
+│   ├── services/              # Business logic services
+│   │   ├── __init__.py
+│   │   ├── file_processor.py  # File processing logic
+│   │   ├── vector_store.py    # ChromaDB integration
+│   │   └── llm_client.py      # Gemini API integration
 │   ├── __init__.py
-│   ├── main.py             # FastAPI app and routes
-│   ├── middleware.py       # Logging and error handling
-│   ├── file_processor.py   # File processing logic
-│   ├── vector_store.py     # ChromaDB integration
-│   └── llm_client.py       # Gemini API integration
-├── frontend/               # Streamlit frontend
+│   ├── main.py               # FastAPI app and routes
+│   └── middleware.py         # Logging and error handling
+├── frontend/                 # Streamlit frontend
 │   ├── __init__.py
-│   └── app.py             # Main Streamlit application
-├── uploads/               # User uploaded files
-├── logs/                  # Application logs
-├── vector_db/            # ChromaDB storage
+│   └── app.py               # Main Streamlit application
+├── uploads/                 # User uploaded files
+├── logs/                   # Application logs
+├── vector_db/             # ChromaDB storage
 ├── models/               # Downloaded Vosk models
-├── docker-compose.yml    # Multi-service deployment
-├── Dockerfile           # Container configuration
-├── pyproject.toml      # UV dependencies
-├── uv.lock            # Dependency lock file
-├── setup.ps1          # Windows setup script
-├── setup.sh           # Linux/Mac setup script
-├── run_dev.ps1        # Windows development runner
-├── run_dev.sh         # Linux/Mac development runner
-└── README.md          # This file
+├── docker-compose.yml   # Multi-service deployment
+├── Dockerfile          # Container configuration
+├── pyproject.toml     # UV dependencies
+├── uv.lock           # Dependency lock file
+└── README.md         # This file
 ```
 
 ## 🔍 Supported File Types
@@ -293,6 +279,15 @@ streamlit run frontend/app.py --server.port 8502
 - Use smaller Vosk models
 - Increase Docker memory limits
 
+#### 5. Docker Build Issues
+```bash
+# Clean Docker cache
+docker system prune -a
+
+# Rebuild without cache
+docker-compose build --no-cache
+```
+
 ### Logs and Debugging
 
 ```bash
@@ -307,6 +302,28 @@ docker-compose logs -f frontend
 export LOG_LEVEL=DEBUG
 ```
 
+## 🚀 Production Deployment
+
+### Docker Production Setup
+```bash
+# Production environment variables
+cp .env.example .env
+# Edit .env with your production values
+
+# Start in production mode
+docker-compose -f docker-compose.prod.yml up -d
+
+# Monitor services
+docker-compose ps
+docker-compose logs -f
+```
+
+### Performance Optimization
+- Use production ASGI server (Gunicorn + Uvicorn workers)
+- Configure resource limits in Docker Compose
+- Set up reverse proxy (Nginx) for load balancing
+- Configure persistent volumes for data storage
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -316,9 +333,7 @@ export LOG_LEVEL=DEBUG
 5. Push to your branch: `git push origin feature-name`
 6. Submit a pull request
 
-## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
@@ -327,14 +342,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Streamlit](https://streamlit.io/) for the web framework
 - [FastAPI](https://fastapi.tiangolo.com/) for the backend framework
 - [Google Gemini](https://ai.google.dev/) for language model integration
-
-## 📞 Support
-
-For questions, issues, or contributions:
-- Create an issue on GitHub
-- Check the troubleshooting section above
-- Review the API documentation at http://localhost:8000/docs
-
 ---
 
-**Built with ❤️ using Python 3.11, FastAPI, Streamlit, and modern AI technologies.**
