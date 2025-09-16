@@ -5,9 +5,16 @@ class QueryRequest(BaseModel):
     query: str
     max_results: Optional[int] = 5
 
-class SourceInfo(BaseModel):
+class SourceMetadata(BaseModel):
+    title: str
+    filename: str
+    file_type: str
+    chunk_index: int
     document_id: str
-    content_preview: str
+
+class SourceInfo(BaseModel):
+    content: str
+    metadata: SourceMetadata
     relevance_score: float
 
 class QueryResponse(BaseModel):

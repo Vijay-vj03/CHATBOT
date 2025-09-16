@@ -171,12 +171,78 @@ st.markdown("""
     .assistant-message {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         color: #2c3e50;
-        padding: 1.5rem;
+        padding: 1rem 1.5rem;
         border-radius: 18px 18px 18px 5px;
         margin: 1rem 0;
-        margin-right: 20%;
+        margin-right: 10%;
         border-left: 4px solid #667eea;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    /* Enhanced styling for assistant content within the message box */
+    .assistant-content {
+        margin-top: 0.5rem;
+        line-height: 1.6;
+    }
+    
+    .assistant-content h1, .assistant-content h2, .assistant-content h3 {
+        color: #2c3e50;
+        margin-top: 1.2rem;
+        margin-bottom: 0.6rem;
+        font-weight: 700;
+    }
+    
+    .assistant-content h3 {
+        color: #667eea;
+        font-size: 1.1rem;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 0.2rem;
+    }
+    
+    .assistant-content ul, .assistant-content ol {
+        margin: 0.8rem 0;
+        padding-left: 1.2rem;
+    }
+    
+    .assistant-content li {
+        margin: 0.3rem 0;
+        line-height: 1.5;
+    }
+    
+    .assistant-content strong {
+        color: #495057;
+        font-weight: 700;
+    }
+    
+    .assistant-content em {
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .assistant-content code {
+        background: #ffffff;
+        color: #e83e8c;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .assistant-content blockquote {
+        border-left: 3px solid #667eea;
+        background: #ffffff;
+        margin: 0.8rem 0;
+        padding: 0.8rem;
+        border-radius: 0 6px 6px 0;
+        font-style: italic;
+    }
+    
+    .assistant-content p {
+        margin: 0.5rem 0;
+        line-height: 1.6;
     }
     
     /* File upload area */
@@ -423,68 +489,90 @@ def display_metrics(documents):
         """, unsafe_allow_html=True)
 
 def display_chat_message(message, is_user=True):
-    """Display chat message with modern styling"""
+    """Display chat message with modern RAG styling"""
     import html
     import re
     
-    # Clean message but preserve line breaks and basic formatting
-    cleaned_message = message.replace('\n', '<br>')
-    # Escape only dangerous HTML but preserve basic formatting
-    cleaned_message = re.sub(r'<(?!/?br\b)[^>]*>', '', cleaned_message)
-    
     if is_user:
+        # Simple user message display
         st.markdown(f"""
         <div class="user-message">
             <strong>👤 You:</strong><br>
-            {cleaned_message}
+            {html.escape(message)}
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown(f"""
+        # Enhanced assistant message with markdown support - all content inside the white box
+        content_html = f"""
         <div class="assistant-message">
-            <strong>🤖 Assistant:</strong><br>
-            {cleaned_message}
+            <strong>🤖 Assistant:</strong><br><br>
+            <div class="assistant-content">
+                {message}
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(content_html, unsafe_allow_html=True)
 
 def display_sources(sources):
-    """Display sources with collapsible expander"""
+    """Display sources with collapsible expander using titles"""
     if sources:
         with st.expander(f"📚 Sources ({len(sources)} found)", expanded=False):
             for i, source in enumerate(sources, 1):
-                # Debug: Show the actual source structure
-                st.write("Debug - Source structure:", source)
-                
                 # Handle different possible metadata structures
                 metadata = source.get('metadata', {})
                 
-                # Try multiple ways to get filename with more options
+                # Extract title with multiple fallback options
+                title = (
+                    metadata.get('title') or
+                    source.get('title') or
+                    metadata.get('filename') or
+                    source.get('filename') or
+                    source.get('document_id') or
+                    metadata.get('document_id') or
+                    f"Document_{i}"
+                )
+                
+                # Extract filename separately
                 filename = (
+                    metadata.get('filename') or
                     source.get('filename') or
                     source.get('file_name') or
                     source.get('document_name') or
-                    metadata.get('filename') or
                     metadata.get('file_name') or
                     metadata.get('source') or
                     metadata.get('document') or
                     metadata.get('document_name') or
                     metadata.get('file') or
                     metadata.get('name') or
-                    f"Document_{i}"
+                    "Unknown File"
                 )
                 
-                content = source.get('content', source.get('text', ''))
+                # Get content from multiple possible fields
+                content = (
+                    source.get('content') or 
+                    source.get('text') or 
+                    source.get('content_preview') or
+                    "No content available"
+                )
+                
                 if len(content) > 200:
                     content = content[:200] + "..."
                 
-                # Escape HTML characters in filename and content
+                # Escape HTML characters
                 import html
+                escaped_title = html.escape(str(title))
                 escaped_filename = html.escape(str(filename))
                 escaped_content = html.escape(str(content))
                 
+                # Show title prominently, filename as subtitle if different
+                if title != filename and filename != "Unknown File":
+                    source_header = f"📄 Source {i}: {escaped_title}<br><small>File: {escaped_filename}</small>"
+                else:
+                    source_header = f"📄 Source {i}: {escaped_title}"
+                
                 st.markdown(f"""
                 <div class="source-card">
-                    <strong>📄 Source {i}: {escaped_filename}</strong><br>
+                    <strong>{source_header}</strong><br>
                     <em>{escaped_content}</em>
                 </div>
                 """, unsafe_allow_html=True)
@@ -648,6 +736,22 @@ def main():
     # Main chat interface
     st.markdown("### 💬 Chat with Your Documents")
     
+    # Add example queries for better UX
+    if not st.session_state.messages:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 1.5rem; border-radius: 12px; margin: 1rem 0; border-left: 4px solid #667eea;">
+            <h4 style="color: #2c3e50; margin-top: 0;">💡 Try asking questions like:</h4>
+            <ul style="color: #495057; margin-bottom: 0;">
+                <li><strong>"Summarize the main findings of this document"</strong></li>
+                <li><strong>"What are the key arguments presented by the author?"</strong></li>
+                <li><strong>"Extract the methodology used in this research"</strong></li>
+                <li><strong>"What are the limitations mentioned in the study?"</strong></li>
+                <li><strong>"Compare different approaches discussed in the documents"</strong></li>
+                <li><strong>"What conclusions can be drawn from the data?"</strong></li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Display chat messages
     if st.session_state.messages:
         st.markdown('<div class="chat-container">', unsafe_allow_html=True)
@@ -733,21 +837,36 @@ def main():
         if last_message["role"] == "user":
             # Query backend with spinner shown above
             with thinking_placeholder.container():
-                with st.spinner("🤔 Thinking..."):
+                with st.spinner("🤔 Analyzing your question and searching through documents..."):
                     response = query_chatbot(last_message["content"])
             
             if response:
                 answer = response.get('answer', 'No answer received')
                 sources = response.get('sources', [])
+                confidence = response.get('confidence_score', 0.0)
+                
+                # Enhance answer with confidence indicator
+                if confidence > 0:
+                    confidence_text = f"\n\n**Confidence Level:** {confidence:.1%}"
+                    if confidence >= 0.8:
+                        confidence_text += " 🟢 *High confidence*"
+                    elif confidence >= 0.6:
+                        confidence_text += " 🟡 *Medium confidence*"
+                    else:
+                        confidence_text += " 🔴 *Low confidence - consider asking for clarification*"
+                    
+                    answer = answer + confidence_text
                 
                 message_data = {"role": "assistant", "content": answer}
                 if sources:
                     message_data["sources"] = sources
+                if confidence > 0:
+                    message_data["confidence"] = confidence
                 st.session_state.messages.append(message_data)
             else:
                 st.session_state.messages.append({
                     "role": "assistant", 
-                    "content": "❌ Sorry, I couldn't process your question. Please try again."
+                    "content": "❌ Sorry, I couldn't process your question. Please try again or check if your documents are properly uploaded."
                 })
             
             # Reset generating state and clear thinking spinner

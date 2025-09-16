@@ -165,8 +165,14 @@ async def query_documents(request: QueryRequest):
         # Format sources
         sources = [
             {
-                "document_id": doc["metadata"]["filename"],
-                "content_preview": doc["content"][:200] + "..." if len(doc["content"]) > 200 else doc["content"],
+                "content": doc["content"][:200] + "..." if len(doc["content"]) > 200 else doc["content"],
+                "metadata": {
+                    "title": doc["metadata"].get("title", doc["metadata"].get("filename", "Unknown Document")),
+                    "filename": doc["metadata"].get("filename", "Unknown File"),
+                    "file_type": doc["metadata"].get("file_type", "Unknown"),
+                    "chunk_index": doc["metadata"].get("chunk_index", 0),
+                    "document_id": doc["metadata"].get("document_id", "unknown")
+                },
                 "relevance_score": doc["score"]
             }
             for doc in relevant_docs
